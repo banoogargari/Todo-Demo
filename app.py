@@ -1,4 +1,5 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+import sys
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask (__name__)
@@ -13,9 +14,33 @@ class Todo(db.Model):
     def __repr__(self):
         return f'<Todo {self.id} {self.description}>'
 
+# synced up our models with our database
 db.create_all()
 
+@app.route('/todos/create', methods=['POST'])
+def create_todo():
+    error = False
+    body = {}
+    try:   
+        description = request.get_json()['description']
+        todo = Todo(description=description)
+        db.session.add(todo)
+        db.session.commit()
+        body['description'] = todo.description
+    except:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if not error: 
+        return jsonify(body)
 
+
+
+
+
+# // render_template in order to specify an HTML file to render to the user whenever our users visits this route.
 @app.route('/')
 def index():
     return render_template('index.html', data=Todo.query.all())
