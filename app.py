@@ -14,13 +14,22 @@ class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(), nullable=False)
     completed = db.Column(db.Boolean, nullable=False, default=False)
+    list_id = db.Column(db.Integer, db.ForeignKey('todolists.id'), nullable=False)
 
     def __repr__(self):
         return f'<Todo {self.id} {self.description}>'
 
+class TodoList(db.Model):
+    __tablename__= 'todolists'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(), nullable=False)
+    todos = db.relationship('Todo', backref='list', lazy=True)
+
 # synced up our models with our database
 #db.create_all()
 
+
+# create todo item -------------------------
 @app.route('/todos/create', methods=['POST'])
 def create_todo():
     error = False
@@ -41,10 +50,39 @@ def create_todo():
         return jsonify(body)
 
 
+# update todo item -------------------------
+@app.route('/todos/<todo_id>/set-completed', methods=['POST'])
+def set_completed_todo(todo_id):
+    try:
+        completed = request.get_json()['completed']
+        todo = Todo.query.get(todo_id)
+        todo.completed = completed
+        db.session.commit()
+    except:
+        db.session.rollback()
+    finally:
+        db.session.close()
+    return redirect(url_for('index'))
+
+
+# delete todo item -------------------------
+@app.route('/todos/<todo_id>', methods=['DELETE'])
+def delete_todo(todo_id):
+    try:
+        Todo.query.filter_by(id=todo_id).delete()
+        db.session.commit()
+    except:
+        db.session.rollback()
+    finally:
+        db.session.close()
+    return jsonify({ 'success': True })
+
+
+
 
 
 
 # // render_template in order to specify an HTML file to render to the user whenever our users visits this route.
 @app.route('/')
 def index():
-    return render_template('index.html', data=Todo.query.all())
+    return render_template('index.html', data=Todo.query.order_by('id').all())
