@@ -25,6 +25,17 @@
         </style>
     </head>
     <body>
+        <ul id="lists">
+            {% for list in lists %}
+            <li>
+                <a href="/lists/{{ list.id }}">
+                    {{ list.name }}
+                </a>
+            </li>
+            {% endfor %}
+
+
+        </ul>
         <p>Todo</p>
         <div id="error" class="hidden">Something went wrong!</div>
         <form id="form">
@@ -34,13 +45,13 @@
         
 
         <ul id="todos">
-            {% for d in data %}
+            {% for todo in todos %}
             <li>
-                <input class="check-completed" data-id="{{ d.id }}" 
-                type="checkbox" {% if d.completed %} checked
+                <input class="check-completed" data-id="{{ todo.id }}" 
+                type="checkbox" {% if todo.completed %} checked
                 {% endif %} />
-                {{ d.description }}
-                <button class="button" data-id="{{ d.id }}">&cross;</button>
+                {{ todo.description }}
+                <button class="button" data-id="{{ todo.id }}">&cross;</button>
             </li>
             {% endfor %}
         </ul>
